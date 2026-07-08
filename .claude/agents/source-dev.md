@@ -6,8 +6,8 @@ description: Use this agent to write a new Buny WASM source from a novel website
 You develop WASM sources for Buny, the iOS web-novel reader. Sources are Rust crates in this repo (`sources/<id>/`) compiled to `wasm32-unknown-unknown`. Work autonomously by default — only stop and ask the user when you hit one of the blockers listed below.
 
 Repos:
-- `the buny-rs source framework` (also checked out at `the buny-rs source framework`) — the source API: `crates/lib` has the `Source` trait and `register_source!` macro, `crates/cli` is the `buny` CLI, `crates/test-runner` is the native test runner. Check `crates/*/Cargo.toml` `[[bin]]` sections for real binary names before invoking anything — don't guess CLI syntax. Always read the live trait definition at `crates/lib/src/structs/source.rs` before writing signatures — don't trust a memorized signature, this file changes.
-- This repo (`buny-sources`) — existing sources under `sources/`: `en.novel-fire`, `en.novelbuddy`, `en.novelsonline`, `en.royalroad` are real, complete examples. `en.novelarchive` and `en.novelbin` are empty stubs (gitignored build artifacts only, no `Cargo.toml`/`src/`) — do not use them as reference. Before writing a new source, read at least two existing ones fully.
+- **buny-rs** — the source framework: `crates/lib` has the `Source` trait and `register_source!` macro, `crates/cli` is the `buny` CLI, `crates/test-runner` is the native test runner. Check `crates/*/Cargo.toml` `[[bin]]` sections for real binary names before invoking anything — don't guess CLI syntax. Always read the live trait definition at `crates/lib/src/structs/source.rs` before writing signatures — don't trust a memorized signature, this file changes.
+- **This repo** (`buny-sources`) — existing sources under `sources/`: `en.novel-fire`, `en.novelbuddy`, `en.novelsonline`, `en.royalroad` are real, complete examples. `en.novelarchive` and `en.novelbin` are empty stubs (gitignored build artifacts only, no `Cargo.toml`/`src/`) — do not use them as reference. Before writing a new source, read at least two existing ones fully.
 
 ## Pick a pattern: theme-based vs. custom
 
@@ -35,7 +35,7 @@ A source is not finished when it compiles. Verify both:
 
 On top of both gates, exercise the three core methods live (via the CLI/test-runner) and confirm they return real data: novel titles from search, a non-empty chapter list, non-empty chapter content. Report which selectors you're least confident about even if the build/verify pass, since selector drift is the most common way a source silently breaks later.
 
-Build: `cargo build --target wasm32-unknown-unknown --release` inside the source dir. If the wasm target is missing: `rustup target add wasm32-unknown-unknown`. If the `buny` CLI is missing (`command -v buny`), install it from the local checkout, not the git URL, so its bundled schemas/templates match the framework version you're building against: `cargo install --path the buny-rs source framework/crates/cli`.
+Build: `cargo build --target wasm32-unknown-unknown --release` inside the source dir. If the wasm target is missing: `rustup target add wasm32-unknown-unknown`. If the `buny` CLI is missing (`command -v buny`), install it from the buny-rs repo root: `cargo install --path crates/cli` so its bundled schemas/templates match the framework version you're building against.
 
 ## Stop and ask
 
@@ -47,4 +47,4 @@ Build: `cargo build --target wasm32-unknown-unknown --release` inside the source
 
 ## Runtime context (for debugging host-side issues)
 
-The app loads each source as a directory containing `source.json`, optional `filter.json`/`settings.json`, `icon.png`, and `main.wasm`, run by the BunyRunner Swift package (Wasm3 interpreter, host modules Env/Std/Defaults/Net/Html/JavaScript, Postcard-encoded results). Feature detection on the Swift side is by WASM export-name presence — every optional trait listed above already has Swift-side support, so you don't need to touch BunyRunner for a normal new-source or fix task.
+The app loads each source as a directory containing `source.json`, optional `filter.json`/`settings.json`, `icon.png`, and `main.wasm`, run by a Swift WASM host package (Wasm3 interpreter, host modules Env/Std/Defaults/Net/Html/JavaScript, Postcard-encoded results). Feature detection on the Swift side is by WASM export-name presence — every optional trait listed above already has host-side support, so you don't need to modify the host for a normal new-source or fix task.

@@ -32,11 +32,9 @@ buny verify package.bunpack                                 # validate manifest 
 
 ## Related repos
 
-| Repo | Role | Path |
-|---|---|---|
-| buny-rs | `Source` trait, `register_source!` macro, `buny` CLI | `the buny-rs source framework` |
-| BunyRunner | Swift WASM host (Wasm3 + Postcard) | `a WASM host package` |
-| Reader | Consumer iOS app | `a reader application` (see its `Reader/Reader/Docs/Architecture/source-engine.md` for the app-side half of this pipeline) |
+| Repo | Role |
+|---|---|
+| buny-rs | `Source` trait, `register_source!` macro, `buny` CLI. Defines the Rust framework for building WASM sources. |
 
 ## Hard rules
 
@@ -44,4 +42,4 @@ buny verify package.bunpack                                 # validate manifest 
 - `sources/en.novelarchive` and `sources/en.novelbin` are empty stubs (gitignored build artifacts only, nothing committed) — don't treat them as reference examples.
 - A source isn't done when it builds — it needs zero `cargo clippy` warnings **and** a passing `buny verify`.
 - Read the live `Source` trait at `buny-rs/crates/lib/src/structs/source.rs` before writing signatures.
-- `source-dev` exists in both this repo and Reader's `.claude/agents/`. There's no automated sync — see `Docs/memory/tooling-agent-sync.md` before changing one without the other.
+- The `source-dev` agent scaffolds, fixes, and verifies sources. See `Docs/memory/tooling-agent-sync.md` for notes on multi-repo coordination of related tools.

@@ -6,12 +6,12 @@ Last verified against source: 2026-07-07.
 
 Each `sources/<id>/` directory is an independent Rust crate compiled to `wasm32-unknown-unknown` — a scraper for one novel website. There is no Cargo workspace; every source crate stands alone with its own `Cargo.toml`, `Cargo.lock`, and `.cargo/config.toml`. `templates/madtheme/` is a shared crate that several sources depend on by path when their site matches a common CMS pattern (see below).
 
-This repo is one link in a four-repo pipeline:
+This repo is one link in a pipeline:
 
-1. **buny-rs** (`the buny-rs source framework`, also checked out at `the buny-rs source framework`) — the Rust framework. Defines the `Source` trait family, the `register_source!` macro, the host FFI wrappers (HTTP, HTML/CSS selectors, JS eval, KV storage), and the `buny` CLI (`init`/`package`/`build`/`serve`/`verify`/`logcat`).
+1. **buny-rs** — the Rust framework. Defines the `Source` trait family, the `register_source!` macro, the host FFI wrappers (HTTP, HTML/CSS selectors, JS eval, KV storage), and the `buny` CLI (`init`/`package`/`build`/`serve`/`verify`/`logcat`).
 2. **buny-sources** (this repo) — the actual site scrapers, compiled to `.bunpack` packages.
-3. **BunyRunner** (`a WASM host package`) — a Swift package that loads a `.bunpack`/unpacked source directory via a Wasm3 interpreter and exposes it as a `Runner`/`Source` Swift API.
-4. **Reader** (`a reader application`) — the iOS app that consumes `BunyRunner.Source` for browsing, searching, and reading. Its own `Reader/Reader/Docs/Architecture/source-engine.md` documents the app-side half of this pipeline in detail.
+
+Further downstream, these packages are consumed by a WASM host that loads sources and exposes them to reader applications.
 
 ## The `Source` trait contract
 
@@ -76,9 +76,9 @@ There are no unit tests or HTML fixtures anywhere in this repo — correctness i
 
 ## Cross-repo wire contract (why field order matters)
 
-BunyRunner has no shared IDL with buny-rs — the two sides agree on the ABI purely by convention:
+The WASM host has no shared IDL with buny-rs — the two sides agree on the ABI purely by convention:
 
-- **Which exports exist** — `register_source!(Type, Trait1, Trait2, ...)` on the Rust side emits one `#[export_name]` function per trait; BunyRunner's `Interpreter` probes for those exact export names by string to build a `SourceFeatures` struct (duck typing, not declared capability).
-- **How arguments/results are encoded** — Postcard, a positional (not field-name-keyed) wire format. The Rust structs in `buny-rs/crates/lib/src/structs/mod.rs` and the Swift structs in `BunyRunner/Sources/BunyRunner/Models/` must have identical field order for every shared type (`Novel`, `Chapter`, `ContentBlock`, `NovelPageResult`, `Listing`, `Filter`, `FilterValue`, `Setting`, `Home`).
+- **Which exports exist** — `register_source!(Type, Trait1, Trait2, ...)` on the Rust side emits one `#[export_name]` function per trait; the host probes for those exact export names by string to build a feature set (duck typing, not declared capability).
+- **How arguments/results are encoded** — Postcard, a positional (not field-name-keyed) wire format. Field order must match between the Rust structs in `buny-rs/crates/lib/src/structs/mod.rs` and the host's corresponding types for every shared type (`Novel`, `Chapter`, `ContentBlock`, `NovelPageResult`, `Listing`, `Filter`, `FilterValue`, `Setting`, `Home`).
 
-This only matters when changing the *shape* of a shared struct (which isn't part of normal source-authoring work — sources just populate existing structs). It's called out here because nothing enforces the match except manual review across two repos, and a silent mismatch fails as a decode error at runtime, not a build error.
+This only matters when changing the *shape* of a shared struct (which isn't part of normal source-authoring work — sources just populate existing structs). It's called out here because nothing enforces the match except manual review, and a silent mismatch fails as a decode error at runtime, not a build error.
