@@ -1,0 +1,11 @@
+{
+  "name": "source-dev",
+  "version": "1.0.0",
+  "description": "Scaffold, verify, and fix Buny WASM sources: write-source, test-source, and doctor-source skills backed by the source-dev agent.",
+  "author": {
+    "name": "Buny Community"
+  },
+  "homepage": "https://github.com/Buny-Community/agents",
+  "repository": "https://github.com/Buny-Community/agents",
+  "keywords": ["buny", "wasm", "scraper", "source"]
+}

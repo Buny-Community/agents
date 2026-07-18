@@ -1,0 +1,18 @@
+---
+name: chrome-fallback
+description: source-dev's Cloudflare handling — real Chrome via claude-in-chrome as a fallback for WebFetch during authoring, not a runtime fix — plus the 5-listing cap and selection priority
+metadata:
+  type: project
+---
+
+`source-dev` used to treat any Cloudflare/anti-bot wall as an automatic stop-and-ask blocker, because `WebFetch` is headless and cannot pass a JS challenge. As of 2026-07-17, it tries a real Chrome tab (`claude-in-chrome` MCP tools) first — a real browser with a real session frequently clears a managed/JS challenge that a headless fetch can't. Only a challenge that needs human input (visible Turnstile checkbox, CAPTCHA) is still a stop-and-ask blocker.
+
+**This only unblocks authoring** — deriving selectors from a page WebFetch can't see. It is unrelated to whether the shipped source can get past Cloudflare at runtime in the app: that's already solved on the host side by `CloudflareHandler` (hidden `WKWebView`, `cf_clearance` cookie replay — see the Reader repo, `Shared/Components/CloudflareHandler.swift`). Don't add Cloudflare-specific code to a source's Rust — the app detects the `Server: cloudflare` header and routes automatically, nothing in `source.json`/traits configures it.
+
+**Extended 2026-07-17 to hidden API endpoints.** `en.novelfull`'s `ajax/chapter-option?novelId=` endpoint doesn't appear anywhere in the static HTML of the novel page — it's a client-side call the page's own JS fires after load. WebFetch cannot see it (headless, single static fetch); the only way `source-dev` can find such an endpoint is the same Chrome fallback, using `read_network_requests` while navigating the page that triggers the call. `source-dev` also now accepts an optional developer-supplied reference (another ecosystem's plugin source, e.g. an LNReader `.ts` file, or a plain text file of known endpoint URLs) as a lead — never trusted blindly, always verified against the live site, since a reference may be stale or built for a different API version.
+
+**Unlike the Cloudflare fallback, endpoint discovery is not autonomous by default.** If a site needs API-endpoint discovery and no reference was supplied, `source-dev` stops and asks the user for one rather than surveying the site's network traffic unprompted. It only surveys on its own when a reference points it there, or the user's original request explicitly asked it to survey/explore the site itself. The owner's reasoning: unprompted network-traffic surveying is a bigger, noisier action than a Cloudflare pass-through retry, and the user may already have a reference in hand (as happened with the LNReader `novel-full.ts` case that prompted this whole change).
+
+**Listings capped at 5, 2026-07-17.** The listing survey step (added the same day, see above) risked dumping every sort option a site exposes into `res/source.json`'s `listings[]`, which would overwhelm the in-app picker. `source-dev` now caps at 5 and prioritizes: always include latest/newest and popular if the site has either at all (these are what people actually look for); if a site splits "popular" into multiple time windows (weekly/monthly/all-time), pick the closest-to-overall one and drop the rest as redundant rather than listing each; fill remaining slots with genuinely distinct categories, not near-duplicates. Checked against real sources: none currently exceed 5 (`en.royalroad`/`en.novelbuddy` both sit at exactly 5, others fewer), so this is forward-guidance for new sources, not a change to anything already shipped.
+
+See [[tooling-agent-sync]] for why this lives as an agent capability rather than a skill.

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "buny-agents",
+  "description": "Claude Code automation for the Buny reading ecosystem",
+  "owner": {
+    "name": "Buny Community"
+  },
+  "plugins": [
+    {
+      "name": "source-dev",
+      "description": "Scaffold, verify, and fix Buny WASM sources: write-source, test-source, and doctor-source skills backed by the source-dev agent.",
+      "source": "."
+    }
+  ]
+}

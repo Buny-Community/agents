@@ -8,3 +8,5 @@ Dispatch to the `source-dev` agent with the given `sources/<id>` path, framed as
 Do not reimplement any of the build/lint/verify steps here — that logic lives entirely in `source-dev`. This skill exists only for slash-command ergonomics.
 
 Report back pass/fail per gate, and if it fails, what `source-dev` diagnosed as the cause (e.g. a selector broken by a site redesign).
+
+Full buny-sources repo context (stack, layout, build/lint/verify, hard rules) beyond what `source-dev` already knows lives at `${CLAUDE_PLUGIN_ROOT}/AGENTS.md` — read it if you need something not already covered by the agent.
