@@ -23,3 +23,11 @@ metadata:
 - `templates/madtheme` is untracked and unused: `en.novelbuddy` was rewritten as a standalone JSON source in `f40332e`. The earlier madtheme notes here are history, not guidance.
 - Live tests (`cargo test` → `buny-test-runner`, `cargo install --path crates/test-runner`) fail every request with `RequestError` if a per-app outbound firewall (LuLu, Little Snitch) hasn't approved the freshly built binary. curl/python still work, which makes it look like a source bug. Control: run `en.novelbuddy`'s tests.
 - `cargo clippy --all-targets` fails (no `panic_handler` in test cfg); CI runs plain `cargo clippy`.
+
+**Found writing `en.wetriedtls`, 2026-09-28:**
+- `buny init` can leave `res/icon.png` as a 0-byte file, and set `info.id` to a different slug than the directory (`en.we-tried-tls` in `sources/en.wetriedtls/`).
+- `buny-test-runner`'s `Html::unescape` decodes only `&amp;`, `&lt;` and `&gt;` (`crates/test-runner/src/imports/html.rs`). `&nbsp;` and numeric entities pass through unchanged, so tests diverge from the app (SwiftSoup). Decode common entities in the source itself.
+- buny-rs `ContentBlock` has no image variant, but BunyRunner `Models/Content.swift` decodes one (tag 4) and Reader renders it. A source can't send images until buny-rs adds the variant.
+- Reader's `Text(tag:)` strips every `<...>` from paragraph text before parsing markdown, so in-story `<Skill Name>` never shows, whatever the source does.
+- Reader stores `Chapter.locked` but no view reads it (no lock icon, and a tap still opens the chapter). The `ChapterFilterOption` "Locked" filter isn't wired up. Logged in the buny-reader inbox.
+- LNReader plugins can be wrong in the negative direction: the wetriedtls plugin said sort and tag params were ignored, and both worked.

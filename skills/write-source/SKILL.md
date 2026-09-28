@@ -11,6 +11,8 @@ Ask the agent to scaffold, build, lint, package, verify, and live-test the sourc
 
 If the current session can do the work directly (it has the Chrome tools and shell access the agent would use), it may follow `agents/source-dev.md` inline instead of spawning — the agent file is the procedure either way.
 
+After the source passes, run a short retro before reporting. List what this site taught you that the procedure didn't cover: a scaffold defect, a probe that would have saved time, a test-runner or app divergence, a CMS family worth naming. Fold each item into `agents/source-dev.md` (procedure) or `Docs/memory/repo-gotchas.md` (dated facts), and propose any update to the buny-sources working notes. If the user asked for review, show them the diff rather than committing it. Skip anything already covered.
+
 Report back what was produced (source id, file set, clippy/verify/live-test status, discrepancies between the reference and the live site) or what it's blocked on.
 
 Full buny-sources repo context (stack, layout, build/lint/verify, hard rules) beyond what `source-dev` already knows lives at `${CLAUDE_PLUGIN_ROOT}/AGENTS.md`.
