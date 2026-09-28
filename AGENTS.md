@@ -23,8 +23,8 @@ that agent doesn't already cover.
 
 - `sources/<id>/` — one crate per website (e.g. `en.royalroad`, `en.novelbuddy`). `id` convention:
   `{languageCode}.{name}`.
-- `templates/madtheme/` — shared theme crate for sites on a common CMS pattern; several sources
-  depend on it by path instead of implementing `Source` from scratch.
+- `templates/madtheme/` — a former shared theme crate. Not tracked in git and no source depends on
+  it any more (`en.novelbuddy` dropped it in `f40332e`); ignore it if it's on disk.
 - `.github/workflows/` — `clippy.yaml` (lint gate), `pr.yaml` (package + verify gate), `build.yaml`
   (publishes the combined source index to `gh-pages` on push to `main`).
 
@@ -37,7 +37,10 @@ referenced throughout this file (`Docs/Architecture/`, `Docs/memory/`) live in t
 Use the `/write-source <url>`, `/test-source <id>`, or `/doctor-source <id>` skills — they dispatch
 to the `source-dev` agent (see `Buny-Community/agents`' README for install instructions). Don't
 hand-scaffold: the agent knows the current `Source` trait signatures (they drift — read them live
-from `buny-rs`, don't trust memory), the madtheme-vs-custom decision, and both CI gates below.
+from `buny-rs`, don't trust memory), the JSON-API-vs-HTML decision, and the CI gates below. A
+reference (helper file) is optional: usually an LNReader plugin from
+`https://github.com/lnreader/lnreader-plugins/tree/master/plugins/<language>/`, which the agent
+looks up itself when none is given.
 
 ## Build / lint / verify (run inside a source dir)
 

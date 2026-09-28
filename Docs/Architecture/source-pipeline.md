@@ -1,10 +1,10 @@
 # Source pipeline
 
-Last verified against source: 2026-07-07.
+Last verified against source: 2026-09-27.
 
 ## What this repo is
 
-Each `sources/<id>/` directory is an independent Rust crate compiled to `wasm32-unknown-unknown` — a scraper for one novel website. There is no Cargo workspace; every source crate stands alone with its own `Cargo.toml`, `Cargo.lock`, and `.cargo/config.toml`. `templates/madtheme/` is a shared crate that several sources depend on by path when their site matches a common CMS pattern (see below).
+Each `sources/<id>/` directory is an independent Rust crate compiled to `wasm32-unknown-unknown` — a scraper for one novel website. There is no Cargo workspace; every source crate stands alone with its own `Cargo.toml`, `Cargo.lock`, and `.cargo/config.toml`.
 
 This repo is one link in a pipeline:
 
@@ -40,22 +40,15 @@ HTML/HTTP access goes through the `buny` crate's FFI wrappers, not `scraper`/`se
 
 ## Two authoring patterns
 
-**Custom** — a full hand-written `impl Source`. Reference: `sources/en.royalroad` (also `en.novel-fire`, `en.novelsonline`). File set: `Cargo.toml`, `.cargo/config.toml`, `res/{source.json,filter.json,icon.png}`, `src/lib.rs`, one `src/traits/<trait>.rs` per optional trait re-exported from `src/traits/mod.rs`.
+**JSON API** — the site's own frontend calls a JSON API; the source calls the same endpoints with `Request::get(url)?.json_owned()?` (`buny` feature `json` + `serde_json` with `alloc`). Preferred whenever the site has one: stable field names instead of CSS selectors. References: `sources/en.chikari` (plain REST, paged chapters), `sources/en.novelbuddy` (Next.js `/_next/data` routes + a REST API, build-id refresh).
 
-**Theme-based** — for sites built on a specific CMS pattern (a Next.js `__NEXT_DATA__` script tag on novel pages plus a REST search endpoint), `templates/madtheme/src/imp.rs` provides a `trait Impl` with default-implemented scraping methods parametrized by `Params{base_url, api_url, novel_path, use_slug_search, default_rating, date_format}`. A matching source is then just:
+**HTML** — scrape rendered pages with `Request::get(url)?.html()?` and CSS selectors. Reference: `sources/en.royalroad` (also `en.novel-fire`, `en.novelsonline`, `en.novelfull`, `en.novelarchive`).
 
-```rust
-struct NovelBuddy;
-impl Impl for NovelBuddy {
-    fn new() -> Self { Self }
-    fn params(&self) -> Params { Params { base_url: "...".into(), api_url: "...".into(), ..Default::default() } }
-}
-register_source!(MadTheme<NovelBuddy>, ListingProvider);
-```
+Both use the same file set: `Cargo.toml`, `.cargo/config.toml` (must include `rustflags = ["-C", "link-arg=--import-undefined"]`, which `buny init` currently omits), `res/{source.json,filter.json,icon.png}`, `src/lib.rs`, optionally one `src/traits/<trait>.rs` per optional trait re-exported from `src/traits/mod.rs`.
 
-Reference: `sources/en.novelbuddy` (the only current example, ~15 lines total). Prefer this pattern whenever the site fits — it means near-zero scraping code and any theme-wide fix (e.g. a CMS markup change) is made once in `templates/madtheme` rather than per source.
+The former theme pattern (`templates/madtheme`, a `trait Impl` for a Next.js CMS) is gone: `en.novelbuddy` was rewritten as a standalone source in `f40332e`, and the template isn't tracked in git.
 
-Two directories, `sources/en.novelarchive` and `sources/en.novelbin`, are empty gitignored stubs with no committed `Cargo.toml`/`src/` — not usable as reference examples.
+`sources/en.novelbin` is an empty gitignored stub — not a reference example.
 
 ## Manifest and package format
 
@@ -68,7 +61,7 @@ Each source ships `res/source.json` (required — `info.id/name/version/url/cont
 A source isn't done when it compiles. Two independent gates, both enforced in `.github/workflows/`:
 
 1. **`clippy.yaml`** — `cargo clippy` on every changed `sources/*`/`templates/*` dir must produce zero warnings.
-2. **`pr.yaml`** — `buny package` then `buny verify` on the resulting `.bunpack` must both succeed. `verify` validates `source.json`/`filter.json`/`settings.json` against the JSON Schemas bundled in the `buny` CLI, and checks the icon dimensions/opacity.
+2. **`pr.yaml`** — `buny package` then `buny verify` on the resulting `.bunpack` must both succeed. `verify` checks the wasm parses and exports the required functions, validates `source.json` (and `settings.json`) against the JSON Schemas bundled in the `buny` CLI, and checks the icon dimensions/opacity. It does **not** validate `filter.json`: `verify.rs` looks for `Payload/filters.json` while packages contain `filter.json` (a buny-rs bug as of 2026-09-27), so filters must be checked against `filters.schema.json` by hand.
 
 `build.yaml` runs on push to `main`: builds all sources and publishes the combined index to `gh-pages`.
 
