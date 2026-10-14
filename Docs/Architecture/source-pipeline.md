@@ -28,7 +28,7 @@ pub trait Source {
 }
 ```
 
-Optional extension traits (each `: Source`), implement only the ones the site supports: `ListingProvider` (home-page novel listings), `Home` (curated home layout), `DynamicListings`, `DynamicFilters`, `DynamicSettings`, `AlternateCoverProvider`, `BaseUrlProvider`, `NotificationHandler`, `DeepLinkHandler`, `BasicLoginHandler`, `WebLoginHandler`, `MigrationHandler`.
+Optional extension traits (each `: Source`), implement only the ones the site supports: `ListingProvider` (home-page novel listings), `Home` (curated home layout), `DynamicListings`, `DynamicFilters`, `DynamicSettings`, `AlternateCoverProvider`, `ReviewProvider` (paged novel reviews), `BaseUrlProvider`, `NotificationHandler`, `DeepLinkHandler`, `BasicLoginHandler`, `WebLoginHandler`, `MigrationHandler`.
 
 A single macro call at the bottom of `src/lib.rs` wires everything to WASM exports — nothing else needs to be hand-written:
 
